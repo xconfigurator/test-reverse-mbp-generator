@@ -1,13 +1,11 @@
-package liuyang.testreversembpgenerator.generator;
+package liuyang.testreversembpgenerator;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.generator.AutoGenerator;
 import com.baomidou.mybatisplus.generator.InjectionConfig;
 import com.baomidou.mybatisplus.generator.config.*;
-import com.baomidou.mybatisplus.generator.config.po.TableFill;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
@@ -23,16 +21,27 @@ import java.util.Scanner;
  * 视频参考：https://www.imooc.com/video/22857
  * @author liuyang
  * @scine 2021/4/6
+ *
+ * 注：可以把CodeGenerator写入test包，并将Generator相关依赖作用于改为test
  */
 @Slf4j
 public class CodeGenerator {
+    // 数据库链接信息
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/mp?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2B8";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "123456";
+    private static final String DB_DRIVER_CLASSNAME = "com.mysql.cj.jdbc.Driver";
 
+    // 生成包信息
     private static final String PACKAGE_CONFIG_PARENT = "liuyang.testpkg";
     private static final String PACKAGE_CONFIG_MODULE_NAME = "testmodule";
 
+    // 表名称
     // scanner("表名，多个英文逗号分割").split(",")
     // private static final String STRATEGY_TABLE_NAME = "tb_pdt_area_info, tb_pdt_task_info";
-    private static final String STRATEGY_TABLE_NAME = "tb_pdt_arae_info,tb_pdt_task_info";
+    // private static final String STRATEGY_TABLE_NAME = "tb_pdt_arae_info,tb_pdt_task_info";
+    private static final String STRATEGY_TABLE_NAME = "actor";
+
 
     /**
      * <p>
@@ -68,21 +77,22 @@ public class CodeGenerator {
         // swagger
         // gc.setSwagger2(true); 实体属性 Swagger2 注解
         gc.setSwagger2(true);
-        // liuyang 日期类型
+        // liuyang 日期类型 默认是Java 8的
         // java.util java.sql java.time 详见代码注释 默认java.time DateType.TIME_PACK
         gc.setDateType(DateType.TIME_PACK);
         // liuyang 生成代码规则
-        gc.setServiceName("%sService"); // 默认会在接口前加一个I
+        gc.setServiceName("%sService"); // 默认会在接口前加一个I,这样配置就不会再增加I
         mpg.setGlobalConfig(gc);
 
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
         // dsc.setUrl("jdbc:mysql://localhost:3306/ant?useUnicode=true&useSSL=false&characterEncoding=utf8");
-        dsc.setUrl("jdbc:mysql://localhost:3306/pdt-nms?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2B8");
+        // dsc.setUrl("jdbc:mysql://localhost:3306/pdt-nms?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=GMT%2B8");
+        dsc.setUrl(DB_URL);
         // dsc.setSchemaName("public");
-        dsc.setDriverName("com.mysql.cj.jdbc.Driver");
-        dsc.setUsername("root");
-        dsc.setPassword("123456");
+        dsc.setDriverName(DB_DRIVER_CLASSNAME);
+        dsc.setUsername(DB_USERNAME);
+        dsc.setPassword(DB_PASSWORD);
         mpg.setDataSource(dsc);
 
         // 包配置
@@ -110,13 +120,20 @@ public class CodeGenerator {
 
         // 自定义输出配置
         List<FileOutConfig> focList = new ArrayList<>();
-        // 自定义配置会被优先输出
+        // 自定义配置会被优先输出 (若不写这个则会被输出到main/java下)
         focList.add(new FileOutConfig(templatePath) {
             @Override
             public String outputFile(TableInfo tableInfo) {
+                // 风格1： 默认风格（推荐）
+                // 到 src/main/resources/mapper下
+                /*
                 // 自定义输出文件名 ， 如果你 Entity 设置了前后缀、此处注意 xml 的名称会跟着发生变化！！
                 return projectPath + "/src/main/resources/mapper/" + pc.getModuleName()
                         + "/" + tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
+                 */
+
+                // 风格2： pdt风格的包下
+                return projectPath + "/src/main/java/" + pc.getParent().replace(".", "/") + "/mapper/mapping/" + tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
             }
         });
         /*
@@ -131,6 +148,15 @@ public class CodeGenerator {
                 }
                 // 允许生成模板文件
                 return true;
+            }
+        });
+        */
+        // liuyang 配置每次重新生成文件（默认是如果存在就不再生成） 20210406 实测，总是报异常 生成不了Mapper。xml故注释掉。注释掉之后程序可以正常生成。
+        /*
+        cfg.setFileCreate(new IFileCreate() {
+            @Override
+            public boolean isCreate(ConfigBuilder configBuilder, FileType fileType, String filePath) {
+                return true; // 不论之前是否生成过，每次都使用新生成的覆盖原来的项。
             }
         });
         */
@@ -157,9 +183,10 @@ public class CodeGenerator {
         strategy.setEntityLombokModel(true);
         strategy.setRestControllerStyle(true);// 是否是RESTful的风格。
         // 公共父类
-        // strategy.setSuperControllerClass("你自己的父类控制器,没有就不用设置!");
+        // strategy.setSuperControllerClass("你自己的父类控制器,没有就不用设置!"); // 举例:"liuyang.testpackage.testmodule.entity.BaseEntity"
         // 写于父类中的公共字段
         // strategy.setSuperEntityColumns("id");
+        // strategy.setSuperEntityColumns("create_time", "modified_time", "create_account_id", "modified_account_id");// 举例，这些都是包含在BaseEntity中的字段
         // strategy.setInclude(scanner("表名，多个英文逗号分割").split(","));
         strategy.setInclude(STRATEGY_TABLE_NAME.split(","));
         log.info("表名称：" + STRATEGY_TABLE_NAME);
