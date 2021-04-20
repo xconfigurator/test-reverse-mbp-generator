@@ -120,10 +120,10 @@ public class CodeGenerator {
 
         // 自定义输出配置
         List<FileOutConfig> focList = new ArrayList<>();
-        // 自定义配置会被优先输出 (若不写这个则会被输出到main/java下)
         focList.add(new FileOutConfig(templatePath) {
             @Override
             public String outputFile(TableInfo tableInfo) {
+                // /////////////////////////////////////////////////////////////////////////
                 // 风格1： 默认风格（推荐）
                 // 到 src/main/resources/mapper下
                 /*
@@ -132,6 +132,7 @@ public class CodeGenerator {
                         + "/" + tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
                  */
 
+                // /////////////////////////////////////////////////////////////////////////
                 // 风格2： pdt风格的包下
                 return projectPath + "/src/main/java/" + pc.getParent().replace(".", "/") + "/mapper/mapping/" + tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
             }
@@ -181,7 +182,7 @@ public class CodeGenerator {
         strategy.setColumnNaming(NamingStrategy.underline_to_camel);
         //strategy.setSuperEntityClass("你自己的父类实体,没有就不用设置!");
         strategy.setEntityLombokModel(true);
-        strategy.setRestControllerStyle(true);// 是否是RESTful的风格。
+        strategy.setRestControllerStyle(true);// 是否是RESTful的风格。 // 如果是非前后端分离的项目则需要设置为false
         // 公共父类
         // strategy.setSuperControllerClass("你自己的父类控制器,没有就不用设置!"); // 举例:"liuyang.testpackage.testmodule.entity.BaseEntity"
         // 写于父类中的公共字段
@@ -192,8 +193,9 @@ public class CodeGenerator {
         log.info("表名称：" + STRATEGY_TABLE_NAME);
         strategy.setControllerMappingHyphenStyle(true);
         // strategy.setTablePrefix(pc.getModuleName() + "_"); // 设置表名前缀
+
         // liuyang 逻辑伤处字段名称
-        // 配置上之后，如果发现表中有这个字段，在影射实体的时候会增加逻辑删除注解。
+        // 配置上之后，如果发现表中有这个字段，在映射实体的时候会增加逻辑删除注解。
         // strategy.setLogicDeleteFieldName("deleted");
         // liuyang 自动填充策略
         /*
